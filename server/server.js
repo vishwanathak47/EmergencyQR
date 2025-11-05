@@ -41,15 +41,30 @@ app.use('/api/admin', adminRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-// In production serve the built frontend from dist/client
+// In production serve the built frontend
 if (process.env.NODE_ENV === 'production') {
-  const clientDist = path.join(__dirname, 'dist', 'client');
-  app.use(express.static(clientDist));
+  const clientDistPath = path.join(__dirname, 'dist', 'client');
+  console.log('Serving static files from:', clientDistPath);
+  
+  // Serve static files
+  app.use(express.static(clientDistPath));
+  
   // For any route not handled by API, send index.html (client-side routing)
   app.get('*', (req, res) => {
     // don't override API routes
-    if (req.path.startsWith('/api/')) return res.status(404).json({ message: 'Not found' });
-    res.sendFile(path.join(clientDist, 'index.html'));
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ message: 'Not found' });
+    }
+    
+    const indexPath = path.join(clientDistPath, 'index.html');
+    console.log('Attempting to serve:', indexPath);
+    
+    if (!require('fs').existsSync(indexPath)) {
+      console.error('index.html not found at:', indexPath);
+      return res.status(404).send('Frontend files not found');
+    }
+    
+    res.sendFile(indexPath);
   });
 }
 

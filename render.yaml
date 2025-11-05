@@ -2,9 +2,10 @@ services:
   - type: web
     name: emergencyqr
     env: node
+    rootDir: server
     buildCommand: |
-      cd client && npm install && npm run build && cd ../server && npm install
-    startCommand: cd server && node server.js
+      cd ../client && npm install && npm run build && cd ../server && npm install && mkdir -p dist/client && cp -r ../client/dist/* dist/client/
+    startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
