@@ -21,7 +21,8 @@ const allowedOrigins = [
   deployedClientUrl,
   'http://localhost:3000',
   'http://localhost:5173',
-  'http://localhost:5174'
+  'http://localhost:5174',
+  'https://emergencyqrportal.netlify.app'
 ];
 
 // Helper function to check if origin is from Netlify

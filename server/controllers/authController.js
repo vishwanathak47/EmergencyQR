@@ -16,14 +16,16 @@ async function signup(req, res) {
     const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_ACCESS_SECRET || 'dev-secret', { expiresIn: process.env.JWT_ACCESS_EXPIRY });
 
     // Use lax sameSite so cookie is sent on top-level navigations in development.
-    res.cookie('token', token, {
+    // Set domain for cookies based on environment
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      // For cross-site requests (Netlify frontend -> Render backend) cookies must use 'none'
-      // in production and require `secure: true`. In development we keep 'lax' for convenience.
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: true, // Always use secure for cross-origin
+      sameSite: 'none', // Required for cross-site cookies
       maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
-    });
+    };
+    
+    console.log('Setting auth cookie with options:', cookieOptions);
+    res.cookie('token', token, cookieOptions);
     console.log('User signed up:', user.email);
   return res.status(201).json({ user: { id: user._id, email: user.email, role: user.role }, token });
   } catch (err) {
@@ -45,12 +47,15 @@ async function login(req, res) {
 
     const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_ACCESS_SECRET || 'dev-secret', { expiresIn: process.env.JWT_ACCESS_EXPIRY });
 
-    res.cookie('token', token, {
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24 * 7
-    });
+      secure: true, // Always use secure for cross-origin
+      sameSite: 'none', // Required for cross-site cookies
+      maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
+    };
+    
+    console.log('Setting auth cookie with options:', cookieOptions);
+    res.cookie('token', token, cookieOptions);
     console.log('User logged in:', user.email);
   return res.json({ user: { id: user._id, email: user.email, role: user.role }, token });
   } catch (err) {
