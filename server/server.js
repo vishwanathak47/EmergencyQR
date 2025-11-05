@@ -16,12 +16,22 @@ app.use(express.json());
 app.use(cookieParser());
 // Allow the configured client URL and Vite dev server (5173) during development.
 // Allow common local dev ports (5173, 5174) and an explicitly configured CLIENT_URL.
-const allowedOrigins = [process.env.CLIENT_URL || 'http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'];
+const deployedClientUrl = process.env.CLIENT_URL || process.env.VITE_SERVER_URL || 'https://emergencyqr-jtlp.onrender.com';
+const allowedOrigins = [deployedClientUrl, 'http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'];
 app.use(cors({
   origin: function(origin, callback) {
+    // log the origin for debugging
+    console.log('CORS check - origin:', origin);
     // allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+    // allow same-origin requests (when client is served from the same host)
+    try {
+      const url = new URL(origin);
+      if (url.hostname === (process.env.HOSTNAME || url.hostname)) return callback(null, true);
+    } catch (e) {
+      // ignore
+    }
     return callback(new Error('CORS policy: Origin not allowed'));
   },
   credentials: true
