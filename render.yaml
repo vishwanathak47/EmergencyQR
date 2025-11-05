@@ -1,28 +1,42 @@
 services:
   - type: web
     name: emergencyqr
-    env: node
+    runtime: node
+    plan: free
     buildCommand: |
-      # Build client
+      # Debug current location
+      pwd
+      ls -la
+      
+      # Install dependencies and build client
       echo "Building client..."
       cd client
-      npm install --production=false
-      npm run build
+      npm install
+      VITE_SERVER_URL=https://emergencyqr-jtlp.onrender.com npm run build
       cd ..
       
-      # Build server
-      echo "Building server..."
+      # Install server dependencies and copy client build
+      echo "Setting up server..."
       cd server
       npm install
+      
+      # Ensure dist/client directory exists and is empty
+      rm -rf dist/client
       mkdir -p dist/client
+      
+      # Copy client build files
+      echo "Copying client files..."
       cp -r ../client/dist/* dist/client/
+      
+      # Verify the copy
+      echo "Verifying client files..."
       ls -la dist/client
-    startCommand: cd server && node server.js
+    startCommand: cd server && NODE_ENV=production node server.js
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 5000
+        value: "5000"
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET

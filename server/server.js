@@ -43,23 +43,41 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // In production serve the built frontend
 if (process.env.NODE_ENV === 'production') {
+  const fs = require('fs');
   const clientDistPath = path.join(__dirname, 'dist', 'client');
-  console.log('Current directory:', __dirname);
-  console.log('Looking for static files in:', clientDistPath);
   
-  // List contents of the dist directory
+  // Debug information
+  console.log('Environment:', process.env.NODE_ENV);
+  console.log('Current directory:', __dirname);
+  console.log('Static files path:', clientDistPath);
+  
+  // Create dist/client if it doesn't exist
+  if (!fs.existsSync(clientDistPath)) {
+    console.log('Creating client dist directory...');
+    fs.mkdirSync(clientDistPath, { recursive: true });
+  }
+  
+  // List directory contents for debugging
   try {
-    const fs = require('fs');
-    console.log('Contents of dist directory:');
+    const showDir = (dir) => {
+      console.log(`\nContents of ${dir}:`);
+      const items = fs.readdirSync(dir);
+      items.forEach(item => {
+        const fullPath = path.join(dir, item);
+        const stats = fs.statSync(fullPath);
+        console.log(`- ${item} (${stats.isDirectory() ? 'directory' : 'file'})`);
+      });
+    };
+    
+    showDir(__dirname);
     if (fs.existsSync(path.join(__dirname, 'dist'))) {
-      console.log(fs.readdirSync(path.join(__dirname, 'dist')));
-      if (fs.existsSync(clientDistPath)) {
-        console.log('Contents of client directory:');
-        console.log(fs.readdirSync(clientDistPath));
-      }
+      showDir(path.join(__dirname, 'dist'));
+    }
+    if (fs.existsSync(clientDistPath)) {
+      showDir(clientDistPath);
     }
   } catch (err) {
-    console.error('Error checking directories:', err);
+    console.error('Error listing directories:', err);
   }
   
   // Serve static files
@@ -73,19 +91,36 @@ if (process.env.NODE_ENV === 'production') {
     }
     
     const indexPath = path.join(clientDistPath, 'index.html');
-    console.log('Request path:', req.path);
-    console.log('Attempting to serve:', indexPath);
+    console.log('\nServing request:', req.path);
+    console.log('Looking for index.html at:', indexPath);
     
     try {
-      if (!require('fs').existsSync(indexPath)) {
-        console.error('index.html not found at:', indexPath);
+      if (!fs.existsSync(indexPath)) {
+        console.error('index.html not found!');
+        console.log('Searching for index.html in parent directories...');
+        
+        // Try to find index.html in parent directories
+        let searchDir = __dirname;
+        const foundFiles = [];
+        
+        while (searchDir !== path.parse(searchDir).root) {
+          const found = fs.readdirSync(searchDir)
+            .filter(f => f === 'index.html')
+            .map(f => path.join(searchDir, f));
+          foundFiles.push(...found);
+          searchDir = path.dirname(searchDir);
+        }
+        
         return res.status(404).json({
           error: 'Frontend files not found',
-          path: indexPath,
+          searchedPath: indexPath,
           currentDir: __dirname,
-          dirContents: require('fs').readdirSync(__dirname)
+          dirContents: fs.readdirSync(__dirname),
+          foundIndexFiles: foundFiles
         });
       }
+      
+      console.log('Found index.html, serving...');
       res.sendFile(indexPath);
     } catch (err) {
       console.error('Error serving index.html:', err);
