@@ -41,9 +41,9 @@ app.use('/api/admin', adminRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-// In production serve the built frontend from client/dist
+// In production serve the built frontend from dist/client
 if (process.env.NODE_ENV === 'production') {
-  const clientDist = path.join(__dirname, '..', 'client', 'dist');
+  const clientDist = path.join(__dirname, 'dist', 'client');
   app.use(express.static(clientDist));
   // For any route not handled by API, send index.html (client-side routing)
   app.get('*', (req, res) => {
