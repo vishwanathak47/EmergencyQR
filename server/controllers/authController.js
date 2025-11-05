@@ -19,7 +19,9 @@ async function signup(req, res) {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      // For cross-site requests (Netlify frontend -> Render backend) cookies must use 'none'
+      // in production and require `secure: true`. In development we keep 'lax' for convenience.
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
     });
     console.log('User signed up:', user.email);
