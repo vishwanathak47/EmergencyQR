@@ -1,0 +1,12 @@
+const express = require('express');
+const router = express.Router();
+const { signup, login } = require('../controllers/authController');
+
+router.post('/signup', signup);
+router.post('/login', login);
+router.post('/logout', (req, res) => {
+	res.clearCookie('token', { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+	return res.json({ message: 'Logged out' });
+});
+
+module.exports = router;
