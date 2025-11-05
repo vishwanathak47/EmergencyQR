@@ -1,0 +1,12 @@
+{
+  "name": "emergency-qr-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server/server.js",
+    "postinstall": "echo 'Running postinstall: build client and install server deps' && cd client && npm install && npm run build && cd ../server && npm install && rm -rf dist/client || true && mkdir -p dist/client && cp -r ../client/dist/* dist/client/"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
