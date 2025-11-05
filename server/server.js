@@ -44,7 +44,23 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 // In production serve the built frontend
 if (process.env.NODE_ENV === 'production') {
   const clientDistPath = path.join(__dirname, 'dist', 'client');
-  console.log('Serving static files from:', clientDistPath);
+  console.log('Current directory:', __dirname);
+  console.log('Looking for static files in:', clientDistPath);
+  
+  // List contents of the dist directory
+  try {
+    const fs = require('fs');
+    console.log('Contents of dist directory:');
+    if (fs.existsSync(path.join(__dirname, 'dist'))) {
+      console.log(fs.readdirSync(path.join(__dirname, 'dist')));
+      if (fs.existsSync(clientDistPath)) {
+        console.log('Contents of client directory:');
+        console.log(fs.readdirSync(clientDistPath));
+      }
+    }
+  } catch (err) {
+    console.error('Error checking directories:', err);
+  }
   
   // Serve static files
   app.use(express.static(clientDistPath));
@@ -57,14 +73,24 @@ if (process.env.NODE_ENV === 'production') {
     }
     
     const indexPath = path.join(clientDistPath, 'index.html');
+    console.log('Request path:', req.path);
     console.log('Attempting to serve:', indexPath);
     
-    if (!require('fs').existsSync(indexPath)) {
-      console.error('index.html not found at:', indexPath);
-      return res.status(404).send('Frontend files not found');
+    try {
+      if (!require('fs').existsSync(indexPath)) {
+        console.error('index.html not found at:', indexPath);
+        return res.status(404).json({
+          error: 'Frontend files not found',
+          path: indexPath,
+          currentDir: __dirname,
+          dirContents: require('fs').readdirSync(__dirname)
+        });
+      }
+      res.sendFile(indexPath);
+    } catch (err) {
+      console.error('Error serving index.html:', err);
+      res.status(500).json({ error: 'Error serving frontend files', details: err.message });
     }
-    
-    res.sendFile(indexPath);
   });
 }
 
