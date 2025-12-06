@@ -9,6 +9,11 @@ const cors = require('cors');
 
 const app = express();
 
+// If running behind a proxy (Render, Heroku, etc.) Express should trust the proxy
+// so that express-rate-limit and other middleware can correctly read forwarded headers.
+// Setting to 1 trusts the first proxy in front of the app; set to true to trust all.
+app.set('trust proxy', 1);
+
 // Global middleware (strict order)
 app.use(helmet());
 app.use(mongoSanitize());
@@ -82,6 +87,16 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// Return JSON 404 for any unmatched API route (all methods)
+app.use((req, res, next) => {
+  try {
+    if (req.path && req.path.startsWith('/api/')) return res.status(404).json({ message: 'Not found' });
+  } catch (e) {
+    // fallthrough to next middleware if something unexpected
+  }
+  next();
+});
 
 // In production serve the built frontend
 if (process.env.NODE_ENV === 'production') {

@@ -17,21 +17,47 @@ async function submitContact(req, res) {
     }));
 
     if (!fullName || emergencyContacts.length < 1) return res.status(400).json({ message: 'Full name and at least one emergency contact required' });
+    // If a contact for this user already exists, update it instead of creating
+    let contact = await Contact.findOne({ ownerId });
+    if (contact) {
+      contact.fullName = fullName;
+      contact.address = address;
+      contact.bloodGroup = bloodGroup;
+      contact.allergies = allergies;
+      contact.emergencyContacts = emergencyContacts;
+      await contact.save();
+
+      const domain = process.env.DEPLOYED_DOMAIN || process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`;
+      const cleanDomain = String(domain).replace(/\/$/, '');
+      const qrUrl = `${cleanDomain}/scan/${contact._id}`;
+      const qrCodeDataUrl = await qrcode.toDataURL(qrUrl);
+      console.log('Generated QR URL (update):', qrUrl);
+
+      return res.status(200).json({ contact, qrCodeDataUrl, qrUrl, updated: true });
+    }
 
     const newContact = await Contact.create({ ownerId, fullName, address, bloodGroup, allergies, emergencyContacts });
 
-  // Build a safe domain for QR linking:
-  // Priority: DEPLOYED_DOMAIN (explicit production), then CLIENT_URL (frontend dev host),
-  // finally fall back to the request host (protocol + host) to support a variety of envs.
-  const domain = process.env.DEPLOYED_DOMAIN || process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`;
-  const cleanDomain = String(domain).replace(/\/$/, ''); // remove trailing slash if any
-  const qrUrl = `${cleanDomain}/scan/${newContact._id}`;
-  const qrCodeDataUrl = await qrcode.toDataURL(qrUrl);
+    // Build a safe domain for QR linking:
+    // Priority: DEPLOYED_DOMAIN (explicit production), then CLIENT_URL (frontend dev host),
+    // finally fall back to the request host (protocol + host) to support a variety of envs.
+    const domain = process.env.DEPLOYED_DOMAIN || process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`;
+    const cleanDomain = String(domain).replace(/\/$/, ''); // remove trailing slash if any
+    const qrUrl = `${cleanDomain}/scan/${newContact._id}`;
+    const qrCodeDataUrl = await qrcode.toDataURL(qrUrl);
+    console.log('Generated QR URL (create):', qrUrl);
 
-    return res.status(201).json({ contact: newContact, qrCodeDataUrl });
+    return res.status(201).json({ contact: newContact, qrCodeDataUrl, qrUrl, created: true });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: 'Server error' });
+    // Handle duplicate key as conflict just in case
+    if (err && err.code === 11000) {
+      return res.status(409).json({ message: 'Contact already exists for this user' });
+    }
+
+    console.error(err && err.stack ? err.stack : err);
+    const resp = { message: 'Server error' };
+    if (process.env.NODE_ENV !== 'production' && err && err.message) resp.details = err.message;
+    return res.status(500).json(resp);
   }
 }
 
@@ -45,8 +71,10 @@ async function scanContact(req, res) {
 
     return res.json({ fullName: contact.fullName, emergencyContacts: contact.emergencyContacts, allergies: contact.allergies });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: 'Server error' });
+    console.error(err && err.stack ? err.stack : err);
+    const resp = { message: 'Server error' };
+    if (process.env.NODE_ENV !== 'production' && err && err.message) resp.details = err.message;
+    return res.status(500).json(resp);
   }
 }
 
