@@ -131,11 +131,20 @@ function normalizeRelationship(str) {
   return String(str).trim().toLowerCase();
 }
 
+// Decode HTML entities (e.g., &#x2F; to /)
+function decodeHtmlEntities(str) {
+  if (!str) return '';
+  const textArea = document.createElement('textarea');
+  textArea.innerHTML = str;
+  return textArea.value;
+}
+
 export default function ScanPage(){
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [lang, setLang] = useState('en');
+  const [copiedPhone, setCopiedPhone] = useState(null);
 
   useEffect(() => {
     // detect browser language and pick supported one if available
@@ -195,7 +204,7 @@ export default function ScanPage(){
       {data.address && (
         <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900 rounded">
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t.address}</p>
-          <p className="text-gray-900 dark:text-gray-100">{data.address}</p>
+          <p className="text-gray-900 dark:text-gray-100">{decodeHtmlEntities(data.address)}</p>
         </div>
       )}
 
@@ -207,6 +216,12 @@ export default function ScanPage(){
             const relKey = normalizeRelationship(c.relationship);
             const relTranslated = t.relationshipMap[relKey] || c.relationship || '';
             
+            const handleCopyPhone = () => {
+              navigator.clipboard.writeText(c.phone);
+              setCopiedPhone(i);
+              setTimeout(() => setCopiedPhone(null), 2000);
+            };
+            
             return (
               <div key={i} className="border border-gray-200 dark:border-gray-600 p-4 rounded bg-gray-50 dark:bg-gray-700">
                 <div className="font-bold text-lg text-gray-900 dark:text-gray-100">{c.name}</div>
@@ -214,8 +229,20 @@ export default function ScanPage(){
                   <span className="font-semibold">{t.relationship}:</span> {relTranslated}
                 </div>
                 {c.phone && (
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    <span className="font-semibold">{t.phone}:</span> {c.phone}
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-2 flex items-center justify-between">
+                    <div>
+                      <span className="font-semibold">{t.phone}:</span> {c.phone}
+                    </div>
+                    <button
+                      onClick={handleCopyPhone}
+                      className={`ml-2 px-2 py-1 text-xs rounded transition-colors ${
+                        copiedPhone === i
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-400 dark:hover:bg-gray-500'
+                      }`}
+                    >
+                      {copiedPhone === i ? '✓ Copied' : 'Copy'}
+                    </button>
                   </div>
                 )}
               </div>

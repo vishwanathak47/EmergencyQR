@@ -35,18 +35,6 @@ export default function ContactFormPage(){
     a.click();
   }
 
-  async function exportPDF(){
-    // simple pdf export using html2canvas and jsPDF
-    const el = document.getElementById('qrcard');
-    if(!el) return;
-    const canvas = await html2canvas(el);
-    const imgData = canvas.toDataURL('image/png');
-    const { jsPDF } = await import('jspdf');
-    const pdf = new jsPDF();
-    pdf.addImage(imgData, 'PNG', 10, 10, 180, 0);
-    pdf.save('contact.pdf');
-  }
-
   return (
     <div className="p-6">
       <Toaster />
@@ -84,7 +72,6 @@ export default function ContactFormPage(){
           <img src={qrData} alt="qr" />
           <div className="mt-2 flex gap-2">
             <button onClick={downloadPNG} className="px-3 py-1 border rounded">Download PNG</button>
-            <button onClick={exportPDF} className="px-3 py-1 border rounded">Export PDF</button>
           </div>
         </div>
       )}
