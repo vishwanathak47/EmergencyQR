@@ -12,7 +12,6 @@ const ContactSchema = new Schema({
   fullName: { type: String, required: true },
   address: { type: String },
   bloodGroup: { type: String },
-  allergies: { type: String },
   emergencyContacts: { type: [EmergencyContactSchema], required: true, validate: v => Array.isArray(v) && v.length >=1 },
   createdAt: { type: Date, default: Date.now }
 });

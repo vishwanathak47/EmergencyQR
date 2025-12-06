@@ -31,7 +31,7 @@ export default function HomePage(){
         <ol className="mt-4 space-y-3">
           <li className="flex items-start"><span className="mr-3">🔒</span><div><h4 className="font-bold">Step 1: Secure Signup</h4><p className="text-sm text-gray-600 dark:text-gray-300">Create an account to manage your emergency details safely.</p></div></li>
           <li className="flex items-start"><span className="mr-3">📝</span><div><h4 className="font-bold">Step 2: Fill Emergency Form</h4><p className="text-sm text-gray-600 dark:text-gray-300">Enter your personal, medical and emergency contact information.</p></div></li>
-          <li className="flex items-start"><span className="mr-3">� QR</span><div><h4 className="font-bold">Step 3: Generate & Print QR</h4><p className="text-sm text-gray-600 dark:text-gray-300">Download or print the generated QR code for quick access.</p></div></li>
+          <li className="flex items-start"><span className="mr-3">🖨️</span><div><h4 className="font-bold">Step 3: Generate & Print QR</h4><p className="text-sm text-gray-600 dark:text-gray-300">Download or print the generated QR code for quick access.</p></div></li>
           <li className="flex items-start"><span className="mr-3">📱</span><div><h4 className="font-bold">Step 4: Scan Anytime, Anywhere</h4><p className="text-sm text-gray-600 dark:text-gray-300">Authorized scanners can access emergency contacts without logging in.</p></div></li>
         </ol>
       </section>

@@ -9,7 +9,6 @@ async function submitContact(req, res) {
     const fullName = validator.escape(req.body.fullName || '');
     const address = validator.escape(req.body.address || '');
     const bloodGroup = validator.escape(req.body.bloodGroup || '');
-    const allergies = validator.escape(req.body.allergies || '');
     const emergencyContacts = (req.body.emergencyContacts || []).map(c => ({
       name: validator.escape(c.name || ''),
       relationship: validator.escape(c.relationship || ''),
@@ -23,7 +22,6 @@ async function submitContact(req, res) {
       contact.fullName = fullName;
       contact.address = address;
       contact.bloodGroup = bloodGroup;
-      contact.allergies = allergies;
       contact.emergencyContacts = emergencyContacts;
       await contact.save();
 
@@ -36,7 +34,7 @@ async function submitContact(req, res) {
       return res.status(200).json({ contact, qrCodeDataUrl, qrUrl, updated: true });
     }
 
-    const newContact = await Contact.create({ ownerId, fullName, address, bloodGroup, allergies, emergencyContacts });
+    const newContact = await Contact.create({ ownerId, fullName, address, bloodGroup, emergencyContacts });
 
     // Build a safe domain for QR linking:
     // Priority: DEPLOYED_DOMAIN (explicit production), then CLIENT_URL (frontend dev host),
@@ -66,10 +64,10 @@ async function scanContact(req, res) {
     const id = req.params.id;
     if (!id) return res.status(400).json({ message: 'Missing id' });
 
-    const contact = await Contact.findById(id).select('fullName emergencyContacts allergies');
+    const contact = await Contact.findById(id).select('fullName address emergencyContacts');
     if (!contact) return res.status(404).json({ message: 'Contact not found' });
 
-    return res.json({ fullName: contact.fullName, emergencyContacts: contact.emergencyContacts, allergies: contact.allergies });
+    return res.json({ fullName: contact.fullName, address: contact.address, emergencyContacts: contact.emergencyContacts });
   } catch (err) {
     console.error(err && err.stack ? err.stack : err);
     const resp = { message: 'Server error' };
