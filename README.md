@@ -2,6 +2,9 @@
 
 A compact, secure emergency contact system that lets authenticated users store essential emergency information and generate scannable QR codes. Scanning a QR opens a public read-only page containing only minimal, non-sensitive data (name, allergies, and emergency contacts).
 
+## Live Demo
+https://emergencyqrportal.netlify.app/
+
 Core technologies
 - Node.js + Express — API server and routing
 - MongoDB (Mongoose) — data persistence
